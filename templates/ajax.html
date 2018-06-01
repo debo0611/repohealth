@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+    WTForms
+{% endblock %}
+
+{% block content %}
+
+
+<div class="container">
+    <form method="POST">
+        <dl>
+            {{ form.csrf_token }}
+            {{ wtf.quick_form(form) }}
+            <input class="btn btn-primary" type="submit" value="Click Here">
+            <div id=dest></div>
+            <div id=dest2></div>
+            <div id=dest3></div>
+
+        </dl>
+    </form>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        function healthcheck(repoUrl){
+            $("#dest").html('<h2>executing code ...</h2>');
+            $.post('/healthcheck', {
+                url: repoUrl
+            }).done(function(response) {
+                $("#dest").text(response['text']);
+                console.log(response);
+            }).fail(function(response) {
+                $("#dest").text("FAILED");
+                console.log(response);
+            })
+        }
+
+        $('form').on('submit', function(event) {
+            $("#dest").html('<h2>executing code ...</h2>');
+            $.post('/healthcheck', {
+                url : $("#repo_url").val()
+            }).done(function(response) {
+                $("#dest").text(response['op']);
+                
+                console.log(response);
+            }).fail(function(response) {
+                $("#dest").text("FAILED");
+                console.log(response);
+            });
+            $.post('/coverage', {
+                test : "coverage"
+            }).done(function(response) {
+                $("#dest2").text(response['text']);
+            }).fail(function(response) {
+                $("#dest2").text("FAILED COVERAGE");
+            });
+            $.post( "{{ url_for('unittest') }}" , {
+                test : "unittest"
+            }).done(function(response) {
+                $("#dest3").text(response['text']);
+            }).fail(function(response) {
+                $("#dest3").text("FAILED UNITTEST");
+            });
+
+            event.preventDefault();
+        });
+    </script>
+{% endblock %}
